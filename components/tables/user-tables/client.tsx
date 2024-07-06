@@ -12,10 +12,11 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { roles, User } from '@/constants/data';
-import { Plus } from 'lucide-react';
+import { ArrowRightFromLine, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import MyTableComponent from './columns';
+import * as XLSX from 'xlsx';
 interface ProductsClientProps {
   data: User[];
 }
@@ -66,6 +67,14 @@ export const UserClient: React.FC<ProductsClientProps> = ({ data }) => {
     setFilteredData(filteredData);
   }, [filterText, selectedRole]);
 
+  const handleExportExcel = () => {
+    console.log('Exporting Excel', data);
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');
+    XLSX.writeFile(workbook, 'users.xlsx');
+  };
+
   return (
     <>
       <div className="flex items-start justify-between">
@@ -73,12 +82,21 @@ export const UserClient: React.FC<ProductsClientProps> = ({ data }) => {
           title={`Users (${data.length})`}
           description="Manage users (Client side table functionalities.)"
         />
-        <Button
-          className="text-xs md:text-sm"
-          onClick={() => router.push(`/dashboard/user/new`)}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Add New
-        </Button>
+        <div className="flex items-center gap-4">
+          <Button
+            className="text-xs md:text-sm"
+            onClick={() => handleExportExcel()}
+          >
+            <ArrowRightFromLine className="mr-2 h-4 w-4" />
+            Export Excel
+          </Button>
+          <Button
+            className="text-xs md:text-sm"
+            onClick={() => router.push(`/dashboard/user/new`)}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Add New
+          </Button>
+        </div>
       </div>
       <Separator />
       <div className="flex items-center gap-3">
