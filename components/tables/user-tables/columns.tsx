@@ -5,16 +5,18 @@ import { User } from '@/constants/data';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/ui/data-table';
 import { ArrowDownWideNarrow, ArrowDownZA, ArrowUpAZ } from 'lucide-react';
+import { useUserStore } from '@/lib/store';
 
 export const roles = ['Admin', 'User', 'Editor'];
 
 interface IUserTableProps {
   data: User[];
   setFilteredData: (data: User[]) => void;
+  setAction: (action: 'edit' | 'delete') => void;
 }
 const MyTableComponent = (props: IUserTableProps) => {
-  const { data, setFilteredData } = props;
-
+  const { data, setFilteredData, setAction } = props;
+  const setSelectedUser = useUserStore((state) => state.setSelectedUser);
   const [sortConfig, setSortConfig] = useState<{
     key: keyof User;
     direction: 'ascending' | 'descending';
@@ -31,10 +33,10 @@ const MyTableComponent = (props: IUserTableProps) => {
     }
 
     const sortedData = [...data].sort((a, b) => {
-      if (a[key] < b[key]) {
+      if (a[key]! < b[key]!) {
         return direction === 'ascending' ? -1 : 1;
       }
-      if (a[key] > b[key]) {
+      if (a[key]! > b[key]!) {
         return direction === 'ascending' ? 1 : -1;
       }
       return 0;
@@ -85,12 +87,12 @@ const MyTableComponent = (props: IUserTableProps) => {
           FIRST NAME{' '}
           {sortConfig?.key === 'firstName' ? (
             sortConfig.direction === 'ascending' ? (
-              <ArrowUpAZ size={20} />
-            ) : (
               <ArrowDownZA size={20} />
+            ) : (
+              <ArrowUpAZ size={20} />
             )
           ) : (
-            <ArrowDownZA size={20} />
+            <ArrowUpAZ size={20} />
           )}
         </div>
       )
@@ -105,12 +107,12 @@ const MyTableComponent = (props: IUserTableProps) => {
           LAST NAME{' '}
           {sortConfig?.key === 'lastName' ? (
             sortConfig.direction === 'ascending' ? (
-              <ArrowUpAZ size={20} />
-            ) : (
               <ArrowDownZA size={20} />
+            ) : (
+              <ArrowUpAZ size={20} />
             )
           ) : (
-            <ArrowDownZA size={20} />
+            <ArrowUpAZ size={20} />
           )}
         </div>
       )
@@ -125,23 +127,43 @@ const MyTableComponent = (props: IUserTableProps) => {
           ROLE{' '}
           {sortConfig?.key === 'role' ? (
             sortConfig.direction === 'ascending' ? (
-              <ArrowUpAZ size={20} />
-            ) : (
               <ArrowDownZA size={20} />
+            ) : (
+              <ArrowUpAZ size={20} />
             )
           ) : (
-            <ArrowDownZA size={20} />
+            <ArrowUpAZ size={20} />
           )}
         </div>
       )
     },
     {
       id: 'edit',
-      cell: ({ row }) => <div className="cursor-pointer">Edit</div>
+      cell: ({ row }) => (
+        <div
+          className="cursor-pointer"
+          onClick={() => {
+            setAction('edit');
+            setSelectedUser(row.original);
+          }}
+        >
+          Edit
+        </div>
+      )
     },
     {
       id: 'delete',
-      cell: ({ row }) => <div className="cursor-pointer underline">Delete</div>
+      cell: ({ row }) => (
+        <div
+          className="cursor-pointer underline"
+          onClick={() => {
+            setAction('delete');
+            setSelectedUser(row.original);
+          }}
+        >
+          Delete
+        </div>
+      )
     }
   ];
 

@@ -1,79 +1,33 @@
-import { create } from 'zustand';
-import { v4 as uuid } from 'uuid';
-import { persist } from 'zustand/middleware';
-import { Column } from '@/components/kanban/board-column';
-import { UniqueIdentifier } from '@dnd-kit/core';
+// store.ts
+import { User, users } from '@/constants/data';
+import create from 'zustand';
 
-export type Status = 'TODO' | 'IN_PROGRESS' | 'DONE';
+interface UserStore {
+  users: User[];
+  selectedUser: User | null;
+  action: 'edit' | 'delete' | null;
+  setAction: (action: 'edit' | 'delete' | null) => void;
+  addUser: (user: User) => void;
+  updateUser: (user: User) => void;
+  deleteUser: (userId: number) => void;
+  setSelectedUser: (user: User | null) => void;
+  getSelectedUser: () => User | null;
+}
 
-const defaultCols = [
-  {
-    id: 'TODO' as const,
-    title: 'Todo'
-  }
-] satisfies Column[];
-
-export type ColumnId = (typeof defaultCols)[number]['id'];
-
-export type Task = {
-  id: string;
-  title: string;
-  description?: string;
-  status: Status;
-};
-
-export type State = {
-  tasks: Task[];
-  columns: Column[];
-  draggedTask: string | null;
-};
-
-export type Actions = {
-  addTask: (title: string, description?: string) => void;
-  addCol: (title: string) => void;
-  dragTask: (id: string | null) => void;
-  removeTask: (title: string) => void;
-  removeCol: (id: UniqueIdentifier) => void;
-  setTasks: (updatedTask: Task[]) => void;
-  setCols: (cols: Column[]) => void;
-  updateCol: (id: UniqueIdentifier, newName: string) => void;
-};
-
-export const useTaskStore = create<State & Actions>()(
-  persist(
-    (set) => ({
-      tasks: [],
-      columns: defaultCols,
-      draggedTask: null,
-      addTask: (title: string, description?: string) =>
-        set((state) => ({
-          tasks: [
-            ...state.tasks,
-            { id: uuid(), title, description, status: 'TODO' }
-          ]
-        })),
-      updateCol: (id: UniqueIdentifier, newName: string) =>
-        set((state) => ({
-          columns: state.columns.map((col) =>
-            col.id === id ? { ...col, title: newName } : col
-          )
-        })),
-      addCol: (title: string) =>
-        set((state) => ({
-          columns: [...state.columns, { id: uuid(), title }]
-        })),
-      dragTask: (id: string | null) => set({ draggedTask: id }),
-      removeTask: (id: string) =>
-        set((state) => ({
-          tasks: state.tasks.filter((task) => task.id !== id)
-        })),
-      removeCol: (id: UniqueIdentifier) =>
-        set((state) => ({
-          columns: state.columns.filter((col) => col.id !== id)
-        })),
-      setTasks: (newTasks: Task[]) => set({ tasks: newTasks }),
-      setCols: (newCols: Column[]) => set({ columns: newCols })
-    }),
-    { name: 'task-store', skipHydration: true }
-  )
-);
+export const useUserStore = create<UserStore>((set, get) => ({
+  users: users,
+  selectedUser: null,
+  action: null,
+  addUser: (user) => set((state) => ({ users: [...state.users, user] })),
+  updateUser: (user) =>
+    set((state) => ({
+      users: state.users.map((u) => (u.id === user.id ? user : u))
+    })),
+  deleteUser: (userId) =>
+    set((state) => ({
+      users: state.users.filter((u) => u.id !== userId)
+    })),
+  setSelectedUser: (user) => set(() => ({ selectedUser: user })),
+  getSelectedUser: () => get().selectedUser,
+  setAction: (action) => set(() => ({ action }))
+}));
