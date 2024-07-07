@@ -380,7 +380,7 @@ export const UserForm: React.FC<UserFormProps> = ({ roles }) => {
           </div>
           <div className="ml-[8%] flex items-center gap-3">
             <Button
-              className="h-10 w-20 bg-transparent text-black hover:bg-transparent"
+              className="h-10 w-20 border bg-transparent text-black hover:bg-transparent dark:bg-black dark:text-white"
               type="button"
               onClick={() => {
                 router.push('/dashboard/user');
