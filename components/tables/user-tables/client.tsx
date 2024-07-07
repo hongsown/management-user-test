@@ -1,6 +1,5 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/data-table';
 import { Heading } from '@/components/ui/heading';
 import { Input } from '@/components/ui/input';
 import {
@@ -11,23 +10,29 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { roles, User } from '@/constants/data';
+import { roles, rows, User } from '@/constants/data';
+import { useUserStore } from '@/lib/store';
 import { ArrowRightFromLine, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import MyTableComponent from './columns';
 import * as XLSX from 'xlsx';
-interface ProductsClientProps {
-  data: User[];
-}
+import MyTableComponent from './columns';
+import { ConfirmDelete } from './confirm-delete';
 
-export const UserClient: React.FC<ProductsClientProps> = ({ data }) => {
+export const UserClient = () => {
   const router = useRouter();
+  const data = useUserStore((state) => state.users);
+  const selectedUser = useUserStore((state) => state.getSelectedUser);
+  const setSelectedUser = useUserStore((state) => state.setSelectedUser);
+  const setAction = useUserStore((state) => state.setAction);
+  const action = useUserStore((state) => state.action);
   const [filteredData, setFilteredData] = useState<User[]>(data);
   const [filterText, setFilterText] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10; // Set your page size
+  const [pageSize, setPageSize] = useState(10);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const totalUsers = filteredData.length;
   const totalPages = Math.ceil(totalUsers / pageSize);
 
@@ -65,15 +70,29 @@ export const UserClient: React.FC<ProductsClientProps> = ({ data }) => {
       return textMatch && roleMatch;
     });
     setFilteredData(filteredData);
-  }, [filterText, selectedRole]);
+  }, [filterText, selectedRole, data]);
 
   const handleExportExcel = () => {
-    console.log('Exporting Excel', data);
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');
     XLSX.writeFile(workbook, 'users.xlsx');
   };
+
+  const handleSelectRow = (value: string) => {
+    setPageSize(parseInt(value));
+    setCurrentPage(1);
+  };
+  useEffect(() => {
+    if (action === 'edit' && selectedUser()) {
+      router.push(`/dashboard/user/${selectedUser()?.id}`);
+    } else if (action === 'delete' && selectedUser()) {
+      setShowConfirm(true);
+    }
+  }, [action]);
+  useEffect(() => {
+    setAction(null);
+  }, [showConfirm]);
 
   return (
     <>
@@ -92,7 +111,10 @@ export const UserClient: React.FC<ProductsClientProps> = ({ data }) => {
           </Button>
           <Button
             className="text-xs md:text-sm"
-            onClick={() => router.push(`/dashboard/user/new`)}
+            onClick={() => {
+              setSelectedUser(null);
+              router.push(`/dashboard/user/new`);
+            }}
           >
             <Plus className="mr-2 h-4 w-4" /> Add New
           </Button>
@@ -114,11 +136,7 @@ export const UserClient: React.FC<ProductsClientProps> = ({ data }) => {
           </SelectTrigger>
           <SelectContent>
             {roles.map((item, index) => (
-              <SelectItem
-                value={item}
-                key={index}
-                onChange={() => handleSelectRole(item)}
-              >
+              <SelectItem value={item} key={index}>
                 {item}
               </SelectItem>
             ))}
@@ -129,8 +147,26 @@ export const UserClient: React.FC<ProductsClientProps> = ({ data }) => {
       <MyTableComponent
         data={paginatedData}
         setFilteredData={setFilteredData}
+        setAction={setAction}
       />
+
       <div className="flex items-center justify-center gap-6">
+        <div className="flex items-center gap-3">
+          <Select onValueChange={(value) => handleSelectRow(value)}>
+            <SelectTrigger className="w-[100px]">
+              <SelectValue placeholder="10" />
+            </SelectTrigger>
+            <SelectContent>
+              {rows.map((item, index) => (
+                <SelectItem value={item.toString()} key={index}>
+                  {item}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span>Rows per page</span>
+        </div>
+
         <Button
           variant="outline"
           size="sm"
@@ -151,6 +187,7 @@ export const UserClient: React.FC<ProductsClientProps> = ({ data }) => {
           Next
         </Button>
       </div>
+      {showConfirm && <ConfirmDelete setShowConfirm={setShowConfirm} />}
     </>
   );
 };

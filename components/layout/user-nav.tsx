@@ -19,7 +19,7 @@ export function UserNav() {
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
             <AvatarImage
-              src="https://pixnio.com/free-images/2017/09/26/2017-09-26-07-22-55.jpg"
+              src="https://avatars.githubusercontent.com/u/25137037?v=4"
               alt="Sonnguyen"
             />
             <AvatarFallback>{'Sonnguyen'}</AvatarFallback>

@@ -9,8 +9,10 @@ export type User = {
   email: string;
   phoneNumber: string;
   role: string;
+  image?: string;
 };
 export const roles = ['Admin', 'User', 'Editor', 'Role'];
+export const rows = [5, 10, 15, 20];
 export const users: User[] = [
   {
     id: 1,
